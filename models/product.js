@@ -24,7 +24,7 @@ const schema = new Schema({
         required: true
     },
     imageLink: {
-        type: String,
+        type: Object,
         required: false
     }
 }, {

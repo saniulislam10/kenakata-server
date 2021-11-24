@@ -20,6 +20,8 @@ const productRoutes = require('./routes/product');
 const userRoutes = require('./routes/user');
 const uploadRoutes = require('./routes/upload');
 const cartRoutes = require('./routes/cart');
+const imageFolderRoutes = require('./routes/image-folder');
+const galleryRoutes = require('./routes/gallery');
 
 
 /**
@@ -44,6 +46,8 @@ app.use('/api/product', productRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/image-folder', imageFolderRoutes);
+app.use('/api/gallery', galleryRoutes);
 
 
 /**

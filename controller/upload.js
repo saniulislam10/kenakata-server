@@ -2,6 +2,79 @@ const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const AvatarStorage = require('../helpers/AvatarStorage');
+
+/**
+ * SINGLE TO MULTI SIZE IMAGE
+ */
+const storageSingleToMulti = AvatarStorage({
+    square: false,
+    responsive: true,
+    greyscale: false,
+    quality: 100,
+    output: 'jpg'
+});
+
+const limitsSingleToMulti = {
+    files: 1, // allow only 1 file per request
+    // fileSize: 5000000
+    fileSize: 10240 * 10240, // 10 MB (max file size)
+};
+
+const fileFilter = function (req, file, cb) {
+// supported image file mimetypes
+    const allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'image/webp'];
+
+    if (_.includes(allowedMimes, file.mimetype)) {
+// allow supported image files
+        cb(null, true);
+    } else {
+// throw error for invalid files
+        cb(new Error('Invalid file type. your image files are not allowed.'));
+    }
+};
+
+exports.multerConfigSingleToMulti = multer({
+    storage: storageSingleToMulti,
+    limits: limitsSingleToMulti,
+    fileFilter: fileFilter
+});
+
+exports.uploaderImageSingleToMulti = (req, res, next) => {
+
+    let files;
+    const file = req.file.filename;
+    const matches = file.match(/^(.+?)_.+?\.(.+)$/i);
+
+    if (matches) {
+        files = _.map(['lg', 'md', 'sm'], function (size) {
+            return matches[1] + '_' + size + '.' + matches[2];
+        });
+    } else {
+        files = [file];
+    }
+
+
+    files = _.map(files, function (file) {
+        // const port = req.get('port');
+        // const baseurl = req.protocol + '://' + req.get("host");
+        const baseurl = req.protocol + `${process.env.PRODUCTION_BUILD === 'true' ? 's://' : '://'}` + req.get("host");
+        // const path = req.file.path.split('\\').join('/');
+        // console.log(baseurl)
+        // const base = req.protocol + '://' + req.hostname + (port ? ':' + port : '');
+        const url = path.join(req.file.baseUrl, file).replace(/[\\\/]+/g, '/').replace(/^[\/]+/g, '');
+        return (req.file.storage == 'local' ? baseurl : '') + '/' + url;
+    });
+
+    res.status(200).json({
+        images: {
+            big: files[0],
+            medium: files[1],
+            small: files[2]
+        }
+    });
+
+};
 
 
 /**
@@ -57,7 +130,6 @@ exports.multerConfigSingleImageOriginal = multer({
 
 
 exports.uploaderImageOriginal = (req, res, next) => {
-    console.log("Server side image api");
     if (req.file == undefined) {
         res.status(404).json({
             message: 'No Image Provided'
@@ -70,7 +142,6 @@ exports.uploaderImageOriginal = (req, res, next) => {
     const path = req.file.path.split('\\').join('/');
     // const realPath = path.split('\\').join('/');
     const downloadUrl = `${baseurl}/${path}`;
-    console.log(downloadUrl);
     res.status(200).json({
         message: 'Success',
         downloadUrl: downloadUrl

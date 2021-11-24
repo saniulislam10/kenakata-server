@@ -40,9 +40,10 @@ const userSchema = new Schema(
         //     type: String,
         //     required: false
         // },
-        // profileImg: {
-        //     type: String
-        // },
+        profileImg: {
+            type: String,
+            required: false
+        },
         password: {
             type: String,
             required: false
